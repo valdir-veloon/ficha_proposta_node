@@ -2,6 +2,7 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "dotenv": "^16.5.0",
     "mssql": "^11.0.1",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
