@@ -189,6 +189,7 @@ async function update_cliente_database() {
                     id,
                     status,
                     createdAt,
+                    contractURL,
                     customer: { phoneNumber },
                     reservation: { totalAmount, reservationId, numberOfPeriods }
                 } = proposta
@@ -208,6 +209,7 @@ async function update_cliente_database() {
                     id, 
                     status, 
                     reservationExists, 
+                    contractURL
                 })
 
                 if (!reservationExists) {
@@ -218,9 +220,9 @@ async function update_cliente_database() {
 
                     if (!token) {
                         const tokenCreated = await createUser(proposta.customer, formattedCreateAt)
-                        await createNewReservation(id, proposta.reservation, tokenCreated, formattedCreateAt, phoneNumber, status, reservationId)
+                        await createNewReservation(id, proposta.reservation, tokenCreated, formattedCreateAt, phoneNumber, status, reservationId, contractURL)
                     } else {
-                        await createNewReservation(id, proposta.reservation, token, formattedCreateAt, phoneNumber, status, reservationId)
+                        await createNewReservation(id, proposta.reservation, token, formattedCreateAt, phoneNumber, status, reservationId, contractURL)
                     }
 
                 } else {
@@ -231,9 +233,9 @@ async function update_cliente_database() {
 
                     if (!token) {
                         const tokenCreated = await createUser(proposta.customer, formattedCreateAt)
-                        await updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, tokenCreated, formattedCreateAt)
+                        await updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, tokenCreated, formattedCreateAt, contractURL)
                     } else {
-                        await updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, token, formattedCreateAt)
+                        await updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, token, formattedCreateAt, contractURL)
                     }
                 }
             } catch (error) {

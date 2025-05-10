@@ -3,8 +3,9 @@ const config = require("./config");
 const { v4: uuidv4 } = require('uuid');
 const StatusEnum = require("./statusEnum");
 const fs = require("fs").promises; 
+const { format } = require('date-fns');
 
-async function createNewReservation(id, reservation, token, createdAt, phoneNumber, status, reservationId=null) {
+async function createNewReservation(id, reservation, token, createdAt, phoneNumber, status, reservationId=null, contractURL=null) {
 
     if (!reservation) return null
 
@@ -42,7 +43,8 @@ async function createNewReservation(id, reservation, token, createdAt, phoneNumb
                 telefone_bot,
                 data_cadastro,
                 status_acompanhamento,
-                status_digitacao
+                status_digitacao,
+                link_cliente
             )
             VALUES (
                 '${id}',
@@ -63,7 +65,8 @@ async function createNewReservation(id, reservation, token, createdAt, phoneNumb
                 '55${phoneNumber}',
                 '${createdAt}',
                 ${StatusEnum[status]},
-                0
+                0,
+                '${contractURL}'
             )
         `);
 

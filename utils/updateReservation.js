@@ -2,8 +2,9 @@ const sql = require("mssql");
 const config = require("./config");
 const StatusEnum = require("./statusEnum");
 const fs = require("fs").promises;
+const { format } = require('date-fns');
 
-async function updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, token, createdAt) {
+async function updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, token, createdAt, contractURL) {
     const formattedDate = format(new Date(), 'dd-MM-yyyy');
 
     try {
@@ -22,7 +23,8 @@ async function updateReservation(id, reservationId, status, numberOfPeriods, tot
                 status_acompanhamento = ${StatusEnum[status]},
                 token_cadastro = ${token},
                 data_cadastro = ${createdAt},
-                data_update = GETDATE()
+                data_update = GETDATE(),
+                link_cliente = ${contractURL}
             WHERE retorno_numero_proposta = ${reservationId}
         `;
     
