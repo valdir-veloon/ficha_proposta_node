@@ -4,7 +4,8 @@ const StatusEnum = {
     "pendingCustomer": 2,
     "customerRefused": 1,
     "institutionRefused": 4,
-    "pendingInstitution": 5
+    "pendingInstitution": 5,
+    "unblockingError": 6,
 };
 
 module.exports = StatusEnum;

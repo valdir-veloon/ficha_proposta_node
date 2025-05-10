@@ -1,9 +1,14 @@
 const sql = require("mssql");
 const config = require("./config");
+const { v4: uuidv4 } = require('uuid');
+const StatusEnum = require("./statusEnum");
+const fs = require("fs").promises; 
 
 async function createNewReservation(id, reservation, token, createdAt, phoneNumber, status, reservationId=null) {
 
     if (!reservation) return null
+
+    const formattedDate = format(new Date(), 'dd-MM-yyyy');
 
     try {
         await sql.connect(config)
@@ -13,6 +18,9 @@ async function createNewReservation(id, reservation, token, createdAt, phoneNumb
             totalAmount,
             numberOfPeriods
         } = reservation
+
+        const statusMessage = `Criando reserva com status: ${reservationId} - ${status} (${StatusEnum[status]})\n`;
+        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8");
 
         await sql.query(`
             INSERT INTO ficha_proposta.dbo.cliente (
@@ -63,6 +71,10 @@ async function createNewReservation(id, reservation, token, createdAt, phoneNumb
 
     } catch (err) {
         console.error("Erro ao criar reserva:", err)
+        
+        const errorMessage = `Erro ao atualizar reserva: ${err.message}\n`;
+        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8");
+
         return null
     }
 }

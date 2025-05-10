@@ -1,10 +1,16 @@
 const sql = require("mssql");
 const config = require("./config");
 const StatusEnum = require("./statusEnum");
+const fs = require("fs").promises;
 
 async function updateReservation(id, reservationId, status, numberOfPeriods, totalAmount, token, createdAt) {
+    const formattedDate = format(new Date(), 'dd-MM-yyyy');
+
     try {
         await sql.connect(config)
+
+        const statusMessage = `Atualizando reserva com status: ${reservationId} - ${status} (${StatusEnum[status]})\n`;
+        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8");
 
         await sql.query`
             UPDATE ficha_proposta.dbo.cliente
@@ -22,6 +28,10 @@ async function updateReservation(id, reservationId, status, numberOfPeriods, tot
     
     } catch (err) {
         console.error("Erro:", err)
+        
+        const errorMessage = `Erro ao atualizar reserva: ${err.message}\n`;
+        await fs.appendFile(`log-status-${formattedDate}.txt`, errorMessage, "utf8");
+
         await sql.close()
     }
 }

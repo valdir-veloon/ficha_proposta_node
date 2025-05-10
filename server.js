@@ -12,6 +12,7 @@ const { formatDateToISO } = require('./utils/formatDateToIso');
 const { checkIfReservationExists } = require('./utils/checkIfReservationExists');
 const { updateReservation } = require('./utils/updateReservation');
 const { createNewReservation } = require('./utils/createNewReservation');
+const { createUser } = require('./utils/createUser');
 
 // Trecho referente ao processamento da planilha Excel gerada pela Cartos
 async function main() {
@@ -31,12 +32,13 @@ async function main() {
         });
 
         const StatusEnum = {
-            "Aguardando Confirmação de Pagamento": 0,
-            "Cancelada": 3,
-            "Pendente Cliente": 2,
-            "Recusado Cliente": 1,
-            "Recusado Instituição": 4,
-            "Pendente Instituição": 5
+            "awaitingPaymentConfirmation": 0,
+            "canceled": 3,
+            "pendingCustomer": 2,
+            "customerRefused": 1,
+            "institutionRefused": 4,
+            "pendingInstitution": 5,
+            "unblockingError": 6,
         };
 
         /* UPDATE
@@ -156,9 +158,9 @@ async function update_cliente_database() {
     try {
         await sql.connect(config)
 
-        const STARTDATE = '2025-04-28'
-        const ENDDATE = '2025-04-28'
-        const LIMIT = 1500
+        const STARTDATE = '2025-05-01'
+        const ENDDATE = '2025-05-31'
+        const LIMIT = 2000
 
         const base_url = `https://api.tmjbeneficios.com.br/propostas/fgts/listar?startDate=${STARTDATE}&endDate=${ENDDATE}&limit=${LIMIT}`
         const headers = {
@@ -222,9 +224,9 @@ async function update_cliente_database() {
                     }
 
                 } else {
+
                     console.log("atualiza reservationExists")
             
-                    // Atualizar a reserva existente
                     const token = await getToken(cpf)
 
                     if (!token) {
