@@ -1,5 +1,5 @@
-const sql = require("mssql");
-const config = require("./config");
+const sql = require("mssql")
+const config = require("./config")
 
 async function getToken(cpf) {
 
@@ -12,7 +12,7 @@ async function getToken(cpf) {
             SELECT token
             FROM cadastro_unico.dbo.cadastro
             WHERE cpf = ${cpf}
-        `;
+        `
 
         if (result.recordset.length === 0) return null
 
@@ -28,4 +28,4 @@ async function getToken(cpf) {
     }
 }
 
-module.exports = { getToken };
+module.exports = { getToken }

@@ -1,27 +1,27 @@
-const sql = require("mssql");
-const config = require("./config");
-const { v4: uuidv4 } = require('uuid');
-const StatusEnum = require("./statusEnum");
-const fs = require("fs").promises; 
-const { format } = require('date-fns');
+const sql = require("mssql")
+const config = require("./config")
+const { v4: uuidv4 } = require('uuid')
+const StatusEnum = require("./statusEnum")
+const fs = require("fs").promises 
+const { format } = require('date-fns')
 
 async function createNewReservation(id, reservation, token, createdAt, phoneNumber, status, reservationId=null, contractURL=null) {
 
     if (!reservation) return null
 
-    const formattedDate = format(new Date(), 'dd-MM-yyyy');
+    const formattedDate = format(new Date(), 'dd-MM-yyyy')
 
     try {
         await sql.connect(config)
         const token_ficha = uuidv4()
 
         const {
-            totalAmount,
+            reservationAmount,
             numberOfPeriods
         } = reservation
 
-        const statusMessage = `Criando reserva com status: ${reservationId} - ${status} (${StatusEnum[status]})\n`;
-        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8");
+        const statusMessage = `Criando reserva com status: ${reservationId} - ${status} (${StatusEnum[status]})\n`
+        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8")
 
         await sql.query(`
             INSERT INTO ficha_proposta.dbo.cliente (
@@ -51,10 +51,10 @@ async function createNewReservation(id, reservation, token, createdAt, phoneNumb
                 'NEW_115348968',
                 '${token}',
                 'U5AD37AE905-ACD217EAA7-5198CA33C5',
-                ${totalAmount},
+                ${reservationAmount},
                 '324',
                 '${reservationId}',
-                ${totalAmount},
+                ${reservationAmount},
                 ${numberOfPeriods},
                 'U5AD37AE905-ACD217EAA7-5198CA33C5',
                 'FGTS',
@@ -68,15 +68,15 @@ async function createNewReservation(id, reservation, token, createdAt, phoneNumb
                 0,
                 '${contractURL}'
             )
-        `);
+        `)
 
         return true
 
     } catch (err) {
         console.error("Erro ao criar reserva:", err)
         
-        const errorMessage = `Erro ao atualizar reserva: ${err.message}\n`;
-        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8");
+        const errorMessage = `Erro ao atualizar reserva: ${err.message}\n`
+        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8")
 
         return null
     }
