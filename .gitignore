@@ -4,3 +4,4 @@ cliente*
 propostas*
 .env
 log*
+log.*

@@ -1,6 +1,6 @@
-const sql = require("mssql");
-const config = require("./config");
-const { v4: uuidv4 } = require('uuid');
+const sql = require("mssql")
+const config = require("./config")
+const { v4: uuidv4 } = require('uuid')
 
 async function createUser(customer, createdAt) {
     if (!customer) return null
@@ -22,7 +22,7 @@ async function createUser(customer, createdAt) {
             email
         } = customer
 
-        const formatUf = uf.substring(0, 2).toUpperCase();
+        const formatUf = uf.substring(0, 2).toUpperCase()
 
         await sql.query(`
             INSERT INTO cadastro_unico.dbo.cadastro (
@@ -61,7 +61,7 @@ async function createUser(customer, createdAt) {
                 0,
                 '${createdAt}'
             )
-        `);
+        `)
 
         return token
 
