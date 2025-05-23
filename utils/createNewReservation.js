@@ -5,7 +5,16 @@ const StatusEnum = require("./statusEnum")
 const fs = require("fs").promises 
 const { format } = require('date-fns')
 
-async function createNewReservation(id, reservation, token, createdAt, phoneNumber, status, reservationId=null, contractURL=null) {
+async function createNewReservation(
+    id, 
+    reservation, 
+    token, 
+    createdAt, 
+    phoneNumber, 
+    status, 
+    reservationId=null, 
+    contractURL=null
+) {
 
     if (!reservation) return null
 
