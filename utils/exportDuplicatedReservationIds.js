@@ -14,25 +14,6 @@ function exportDuplicatedReservationIds(arrayData) {
     // 2. Filtrar os que aparecem mais de uma vez
     const duplicatedIds = Object.keys(countMap).filter(id => countMap[id] > 1);
 
-    // 3. Pegar apenas um objeto para cada reservationId duplicado
-    const uniqueDuplicatedRows = [];
-    const seen = new Set();
-    arrayData.forEach(item => {
-        const reservationId = item.reservation?.reservationId;
-        if (duplicatedIds.includes(reservationId) && !seen.has(reservationId)) {
-            uniqueDuplicatedRows.push({
-                reservationId: reservationId,
-                customerName: item.customerName,
-                status: item.status,
-                createdAt: item.createdAt,
-                // Adicione outros campos que quiser exportar
-            });
-            seen.add(reservationId);
-        }
-    });
-
-    return uniqueDuplicatedRows;
-
     // 3. Pegar os objetos completos dos duplicados
     const duplicatedRows = arrayData.filter(item =>
         duplicatedIds.includes(item.reservation?.reservationId)
