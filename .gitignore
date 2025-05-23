@@ -5,3 +5,4 @@ propostas*
 .env
 log*
 log.*
+*.xlsx
