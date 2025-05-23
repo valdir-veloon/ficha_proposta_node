@@ -7,7 +7,7 @@ async function cleanDatabase(startDate, endDate) {
         await sql.connect(config)
 
         const result = await sql.query`
-            DELETE FROM ficha_proposta.dbo.cliente_tmp
+            DELETE FROM ficha_proposta.dbo.cliente
             WHERE data_cadastro BETWEEN ${startDate} AND ${endDate}
         `
 

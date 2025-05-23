@@ -14,13 +14,14 @@ const { formatDateToISO } = require('./utils/formatDateToIso')
 const { updateReservation } = require('./utils/updateReservation')
 const { createNewReservation } = require('./utils/createNewReservation')
 const { checkIfReservationExists } = require('./utils/checkIfReservationExists')
+const { exportDuplicatedReservationIds } = require('./utils/exportDuplicatedReservationIds')
 
 async function main() {
     try {
         await sql.connect(config)
 
         const STARTDATE = '2025-05-01'
-        const ENDDATE = '2025-06-01'
+        const ENDDATE = '2025-05-31'
         const LIMIT = 2000
 
         const base_url = `https://api.tmjbeneficios.com.br/propostas/fgts/listar?startDate=${STARTDATE}&endDate=${ENDDATE}&limit=${LIMIT}`
@@ -42,6 +43,8 @@ async function main() {
         const data = await response.json()
         const arrayData = data.data
 
+        exportDuplicatedReservationIds(arrayData)
+       
         // Se tiver dados, limpa a base na data indicada e insere os novos dados
         const cleanDatabaseResponse = await cleanDatabase(STARTDATE, ENDDATE)
 
