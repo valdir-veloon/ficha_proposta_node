@@ -1,21 +1,15 @@
 require('dotenv').config()
 
-const xlsx = require("xlsx")
 const sql = require("mssql")
 const fs = require('fs').promises
-const { v4: uuidv4 } = require('uuid')
-const { subHours, parseISO, format } = require('date-fns')
+const { subHours, parseISO, format, addDays } = require('date-fns')
 
 const config = require('./utils/config')
 const { getToken } = require('./utils/getToken')
 const { createUser } = require('./utils/createUser')
 const { getAuthToken } = require('./utils/getAuthToken')
-const { cleanDatabase } = require('./utils/cleanDatabase')
-const { formatDateToISO } = require('./utils/formatDateToIso')
-const { updateReservation } = require('./utils/updateReservation')
 const { createNewReservation } = require('./utils/createNewReservation')
 const { checkIfReservationExists } = require('./utils/checkIfReservationExists')
-const { exportDuplicatedReservationIds } = require('./utils/exportDuplicatedReservationIds')
 
 async function main() {
     try {
@@ -31,87 +25,102 @@ async function main() {
         const ENDDATE = '2025-05-31'
         const LIMIT = 2000
 
-        const base_url = `https://api.tmjbeneficios.com.br/propostas/fgts/listar?startDate=${STARTDATE}&endDate=${ENDDATE}&limit=${LIMIT}`
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + authToken
-        }
+        let currentStart = parseISO(STARTDATE)
+        const finalDate = parseISO(ENDDATE)
 
-        const response = await fetch(base_url, {
-            method: 'GET',
-            headers: headers
-        })
+        while (currentStart <= finalDate) { 
+            let currentEnd = addDays(currentStart, 9) // Busca de 10 em 10 dias
+            if (currentEnd > finalDate) currentEnd = finalDate
 
-        if (!response.ok) {
-            console.error('Erro ao chamar a API:', response.statusText)
-            return
-        }
+            const startStr = format(currentStart, 'yyyy-MM-dd')
+            const endStr = format(currentEnd, 'yyyy-MM-dd')
 
-        const data = await response.json()
-        const arrayData = data.data
-
-        for (const [index, proposta] of arrayData.entries()) {
-            console.log(`Processando item ${index + 1} de ${arrayData.length}`)
-
-            try {
-                const {
-                    id,
-                    status,
-                    createdAt,
-                    contractURL,
-                    customer: { phoneNumber },
-                    reservation: { totalAmount, reservationId, numberOfPeriods, reservationAmount }
-                } = proposta
-
-                const cpf = String(proposta.customer.cpf).replace(/\D/g, '')
-                const reservationExists = await checkIfReservationExists(reservationId, createdAt, id)
-
-                const date = parseISO(createdAt)
-                const newDate = subHours(date, 3)
-                const formattedCreateAt = format(newDate, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-
-                // 1. Remover todos os registros com esse reservationId
-                await sql.query`
-                    DELETE FROM ficha_proposta.dbo.cliente
-                    WHERE retorno_numero_proposta = ${reservationId}
-                `
-
-                // 2. Buscar ou criar token
-                let token = await getToken(cpf)
-                if (!token) {
-                    token = await createUser(proposta.customer, formattedCreateAt)
-                }
-
-                console.log(`data to create new reservation ${STARTDATE} a ${ENDDATE}`, {
-                    index: index + 1,
-                    total: arrayData.length,
-                    reservationId, 
-                    cpf, 
-                    id, 
-                    status, 
-                    reservationExists, 
-                    contractURL
-                })
-
-                // 3. Inserir o registro
-                await createNewReservation(
-                    id,
-                    proposta.reservation,
-                    token,
-                    formattedCreateAt,
-                    phoneNumber,
-                    status,
-                    reservationId,
-                    contractURL
-                )
-                
-                console.log(`Reservation created successfully for ID: ${id}`)
-
-            } catch (error) {
-                console.error(`Erro ao processar item ${index + 1} (ID: ${proposta?.id}):`, error)
-                const logMessage = `${proposta?.id}\n`
-                await fs.appendFile('log.txt', logMessage, 'utf8')
+            const base_url = `https://api.tmjbeneficios.com.br/propostas/fgts/listar?startDate=${startStr}&endDate=${endStr}&limit=${LIMIT}`
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + authToken
             }
+    
+            const response = await fetch(base_url, {
+                method: 'GET',
+                headers: headers
+            })
+    
+            if (!response.ok) {
+                console.error('Erro ao chamar a API:', response.statusText)
+                currentStart = addDays(currentEnd, 1)
+                continue
+            }
+
+            const data = await response.json()
+            const arrayData = data.data
+            for (const [index, proposta] of arrayData.entries()) {
+                console.log(`Processando item ${index + 1} de ${arrayData.length}`)
+    
+                try {
+                    const {
+                        id,
+                        status,
+                        createdAt,
+                        contractURL,
+                        customer: { phoneNumber },
+                        reservation: { totalAmount, reservationId, numberOfPeriods, reservationAmount }
+                    } = proposta
+    
+                    const cpf = String(proposta.customer.cpf).replace(/\D/g, '')
+                    const reservationExists = await checkIfReservationExists(reservationId, createdAt, id)
+    
+                    const date = parseISO(createdAt)
+                    const newDate = subHours(date, 3)
+                    const formattedCreateAt = format(newDate, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    
+                    // 1. Remover todos os registros com esse reservationId
+                    await sql.query`
+                        DELETE FROM ficha_proposta.dbo.cliente
+                        WHERE retorno_numero_proposta = ${reservationId}
+                    `
+    
+                    // 2. Buscar ou criar token
+                    let token = await getToken(cpf)
+                    if (!token) {
+                        token = await createUser(proposta.customer, formattedCreateAt)
+                    }
+    
+                    console.log(`data to create new reservation ${STARTDATE} a ${ENDDATE}`, {
+                        index: index + 1,
+                        total: arrayData.length,
+                        reservationId, 
+                        cpf, 
+                        id, 
+                        status, 
+                        reservationExists, 
+                        contractURL
+                    })
+    
+                    // 3. Inserir o registro
+                    await createNewReservation(
+                        id,
+                        proposta.reservation,
+                        token,
+                        formattedCreateAt,
+                        phoneNumber,
+                        status,
+                        reservationId,
+                        contractURL
+                    )
+                    
+                    console.log(`Reservation created successfully for ID: ${id}`)
+    
+                } catch (error) {
+                    console.error(`Erro ao processar item ${index + 1} (ID: ${proposta?.id}):`, error)
+                    const logMessage = `${proposta?.id}\n`
+                    await fs.appendFile('log.txt', logMessage, 'utf8')
+                }
+            }
+
+            currentStart = addDays(currentEnd, 1)
+            console.log(`Próxima data de início: ${format(currentStart, 'yyyy-MM-dd')}`)
+            console.log(`Próxima data de fim: ${format(currentEnd, 'yyyy-MM-dd')}`)
         }
 
     } catch (err) {

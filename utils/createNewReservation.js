@@ -1,9 +1,9 @@
 const sql = require("mssql")
+const fs = require("fs").promises 
 const config = require("./config")
 const { v4: uuidv4 } = require('uuid')
-const StatusEnum = require("./statusEnum")
-const fs = require("fs").promises 
 const { format } = require('date-fns')
+const StatusEnum = require("./statusEnum")
 
 async function createNewReservation(
     id, 
