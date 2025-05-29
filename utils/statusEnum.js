@@ -6,6 +6,14 @@ const StatusEnum = {
     "institutionRefused": 4,
     "pendingInstitution": 5,
     "unblockingError": 6,
+    "undefined": 7
 }
 
-module.exports = StatusEnum
+function getStatusEnum(status) {
+    return StatusEnum[status] ?? 7
+}
+
+module.exports = { 
+    StatusEnum, 
+    getStatusEnum 
+}

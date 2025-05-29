@@ -6,6 +6,7 @@ const { format } = require('date-fns')
 const StatusEnum = require("./statusEnum")
 
 async function createNewReservation(
+    totalProcessado,
     id, 
     reservation, 
     token, 
@@ -29,11 +30,32 @@ async function createNewReservation(
             numberOfPeriods
         } = reservation
 
-        const statusMessage = `Criando reserva com status: ${reservationId} - ${status} (${StatusEnum[status]})\n`
+        const status_acompanhamento = StatusEnum.getStatusEnum(status)
+
+        const statusMessage = `Criando reserva com status: ${reservationId} - ${status} (${status_acompanhamento})\n`
         await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8")
+
+        const valorReservationAmount = Number(reservationAmount) || 0
+
+        console.log('insert create reservation: ', {
+            totalProcessado,
+            id,
+            valorReservationAmount,
+            numberOfPeriods,
+            reservationId,
+            status,
+            status_acompanhamento,
+            contractURL,
+            token_ficha,
+            phoneNumber,
+            createdAt
+        })
+
+        // Remover o id para rodar no banco de dados de produção, colocando o totalProcessado em dev
 
         await sql.query(`
             INSERT INTO ficha_proposta.dbo.cliente (
+                id,
                 codigo_da_operacao,
                 uid_empresa,
                 token_cadastro,
@@ -56,14 +78,15 @@ async function createNewReservation(
                 link_cliente
             )
             VALUES (
+                '${totalProcessado}',
                 '${id}',
                 'NEW_115348968',
                 '${token}',
                 'U5AD37AE905-ACD217EAA7-5198CA33C5',
-                ${reservationAmount},
+                ${valorReservationAmount},
                 '324',
                 '${reservationId}',
-                ${reservationAmount},
+                ${valorReservationAmount},
                 ${numberOfPeriods},
                 'U5AD37AE905-ACD217EAA7-5198CA33C5',
                 'FGTS',
@@ -73,7 +96,7 @@ async function createNewReservation(
                 null,
                 '55${phoneNumber}',
                 '${createdAt}',
-                ${StatusEnum[status]},
+                ${status_acompanhamento},
                 0,
                 '${contractURL}'
             )
@@ -83,10 +106,8 @@ async function createNewReservation(
 
     } catch (err) {
         console.error("Erro ao criar reserva:", err)
-        
-        const errorMessage = `Erro ao atualizar reserva: ${err.message}\n`
-        await fs.appendFile(`log-status-${formattedDate}.txt`, statusMessage, "utf8")
-
+        const errorMessage = `Erro ao criar reserva: ${err.message}\n`
+        await fs.appendFile(`log-status-${formattedDate}.txt`, errorMessage, "utf8")
         return null
     }
 }

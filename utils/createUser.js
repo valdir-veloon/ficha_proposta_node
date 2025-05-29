@@ -22,7 +22,7 @@ async function createUser(customer, createdAt) {
             email
         } = customer
 
-        const formatUf = uf.substring(0, 2).toUpperCase()
+        const formatUf = (uf || '').substring(0, 2).toUpperCase()
 
         await sql.query(`
             INSERT INTO cadastro_unico.dbo.cadastro (
